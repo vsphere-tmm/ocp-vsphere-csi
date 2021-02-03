@@ -1,0 +1,114 @@
+# Installing CSI on OCP
+
+## Update the VMs to VMHW 15 and include UUID
+
+### Export GOVC vars
+
+```sh
+export GOVC_PASSWORD=P@ssw0rd                                                                                              
+export GOVC_USERNAME=administrator@vsphere.local
+export GOVC_URL=https://vc01.satm.eng.vmware.com/sdk
+export GOVC_INSECURE=1
+export GOVC_USERNAME=administrator@vsphere.local
+```
+
+### Export OCP cluster name
+
+```sh
+export OCP_CLUSTER_NAME=demo
+```
+
+### Patch VMs
+
+```sh
+# Power off VMs
+govc find / -type m -runtime.powerState poweredOn -name $OCP_CLUSTER_NAME-'*' | xargs -L 1 govc vm.power -off $1
+# Enable Disk UUID
+govc find / -type m -runtime.powerState poweredOff -name $OCP_CLUSTER_NAME-'*' | xargs -L 1 govc vm.change -e="disk.enableUUID=1" -vm $1
+# Upgrade VMHW to v15
+govc find / -type m -runtime.powerState poweredOff -name $OCP_CLUSTER_NAME-'*' | xargs -L 1 govc vm.upgrade -version=15 -vm $1
+# Power on VMs
+govc find / -type m -runtime.powerState poweredOff -name $OCP_CLUSTER_NAME-'*' | grep -v rhcos | xargs -L 1 govc vm.power -on $1
+```
+
+## Taint nodes for CPI install
+
+```sh
+kubectl taint nodes --all 'node.cloudprovider.kubernetes.io/uninitialized=true:NoSchedule'
+```
+
+## Create secrets and configmaps for CPI and CSI
+
+### Edit the conf files
+
+Open both [vsphere.conf](./vsphere.conf) and [csi-vsphere.conf](csi-vsphere.conf) and change `cluster-id` so that it is unique in your vCenter, using the OCP cluster ID, i.e: `demo-qrtnt` would be adequate.
+
+Also edit the vCenter address, username, password, datacenter to your environment.
+
+### Apply conf files to cluster
+
+```sh
+oc create secret generic vsphere-config-secret --from-file=csi-vsphere.conf --namespace=kube-system
+oc get secret vsphere-config-secret --namespace=kube-system
+oc create configmap cloud-config --from-file=vsphere.conf --namespace=kube-system
+```
+
+## Install CPI
+
+```sh
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-vsphere/master/manifests/controller-manager/cloud-controller-manager-roles.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-vsphere/master/manifests/controller-manager/cloud-controller-manager-role-bindings.yaml
+kubectl apply -f https://github.com/kubernetes/cloud-provider-vsphere/raw/master/manifests/controller-manager/vsphere-cloud-controller-manager-ds.yaml
+```
+
+### Verify CPI
+
+This must print out a `ProviderID` per node, or CSI will not work - if it is not populated, then CPI was probably not initialised correctly (check your taints).
+
+```sh
+kubectl describe nodes | grep "ProviderID"
+```
+
+## Install CSI
+
+### For K8s >=1.17 (>=OCP 4.4)
+
+```sh
+oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-7.0u1/rbac/vsphere-csi-controller-rbac.yaml
+oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-7.0u1/deploy/vsphere-csi-node-ds.yaml
+oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-7.0u1/deploy/vsphere-csi-controller-deployment.yaml
+```
+
+### For K8s <=1.16 (<=OCP 4.3)
+
+```sh
+oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v1.0.3/rbac/vsphere-csi-controller-rbac.yaml
+oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v1.0.3/deploy/vsphere-csi-node-ds.yaml
+oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v1.0.3/deploy/vsphere-csi-controller-ss.yaml
+```
+
+### Verify CSI
+
+```sh
+kubectl get deployment --namespace=kube-system
+kubectl get daemonsets vsphere-csi-node --namespace=kube-system
+kubectl describe csidrivers
+kubectl get CSINode
+```
+
+## Create a StorageClass and Deploy a volume
+
+Edit the [sc.yaml](./sc.yaml) and [pvc.yaml](./pvc.yaml) to suit your environment (change the storage policy in the SC, adjust the name if desired).
+
+```sh
+kubectl apply -f sc.yaml
+kubectl apply -f pvc.yaml
+```
+
+### Verify the deployed volume
+
+Output in the `STATUS` column, after 10-15s should be `Bound` for both:
+
+```sh
+kubectl get pv,pvc
+```
