@@ -41,9 +41,9 @@ kubectl taint nodes --all 'node.cloudprovider.kubernetes.io/uninitialized=true:N
 
 ### Edit the conf files
 
-Open both [vsphere.conf](./vsphere.conf) and [csi-vsphere.conf](csi-vsphere.conf) and change `cluster-id` so that it is unique in your vCenter, using the OCP cluster ID, i.e: `demo-qrtnt` would be adequate.
+Open [csi-vsphere.conf](csi-vsphere.conf) and change `cluster-id` so that it is unique _**in your vCenter**_, using the OCP cluster ID, i.e: `demo-qrtnt` would be adequate. **N.B: It is _extremely_ important that this is unique per cluster, or you will have volume mounting problems.**
 
-Also edit the vCenter address, username, password, datacenter to your environment.
+Also edit the `vCenter address`, `username`, `password`, `datacenter` to your environment - do the same for [vsphere.conf](vsphere.conf).
 
 ### Apply conf files to cluster
 
@@ -71,7 +71,7 @@ kubectl describe nodes | grep "ProviderID"
 
 ## Install CSI
 
-### For K8s >=1.17 (>=OCP 4.4)
+### For vSphere 7.0 U1
 
 ```sh
 oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-7.0u1/rbac/vsphere-csi-controller-rbac.yaml
@@ -79,12 +79,20 @@ oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver
 oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-7.0u1/deploy/vsphere-csi-controller-deployment.yaml
 ```
 
-### For K8s <=1.16 (<=OCP 4.3)
+### For vSphere 7.0
 
 ```sh
-oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v1.0.3/rbac/vsphere-csi-controller-rbac.yaml
-oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v1.0.3/deploy/vsphere-csi-node-ds.yaml
-oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v1.0.3/deploy/vsphere-csi-controller-ss.yaml
+oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-7.0/rbac/vsphere-csi-controller-rbac.yaml
+oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-7.0/deploy/vsphere-csi-node-ds.yaml
+oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-7.0/deploy/vsphere-csi-controller-deployment.yaml
+```
+
+### For vSphere 6.7 U3
+
+```sh
+oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-67u3/rbac/vsphere-csi-controller-rbac.yaml
+oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-67u3/deploy/vsphere-csi-node-ds.yaml
+oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-67u3/deploy/vsphere-csi-controller-deployment.yaml
 ```
 
 ### Verify CSI
