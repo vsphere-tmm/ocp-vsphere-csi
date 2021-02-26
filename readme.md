@@ -41,7 +41,9 @@ kubectl taint nodes --all 'node.cloudprovider.kubernetes.io/uninitialized=true:N
 
 ### Edit the conf files
 
-Open [csi-vsphere.conf](csi-vsphere.conf) and change `cluster-id` so that it is unique _**in your vCenter**_, using the OCP cluster ID, i.e: `demo-qrtnt` would be adequate. **N.B: It is _extremely_ important that this is unique per cluster, or you will have volume mounting problems.**
+Open [csi-vsphere.conf](csi-vsphere.conf) and change `cluster-id` so that it is unique _**in your vCenter**_, using the OCP cluster ID, i.e: `demo-qrtnt` would be adequate.
+
+**N.B: It is _extremely_ important that this is unique per K8s cluster, or you will have volume mounting problems. I.E: Each K8s cluster should have a totally unique `cluster-id`.**
 
 Also edit the `vCenter address`, `username`, `password`, `datacenter` to your environment - do the same for [vsphere.conf](vsphere.conf).
 
