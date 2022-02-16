@@ -59,9 +59,9 @@ oc create configmap cloud-config --from-file=vsphere.conf --namespace=kube-syste
 Official Documentation - [Install vSphere Cloud Provider Interface](https://docs.vmware.com/en/VMware-vSphere-Container-Storage-Plug-in/2.0/vmware-vsphere-csp-getting-started/GUID-0C202FC5-F973-4D24-B383-DDA27DA49BFA.html)
 
 ```sh
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-vsphere/master/manifests/controller-manager/cloud-controller-manager-roles.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-vsphere/master/manifests/controller-manager/cloud-controller-manager-role-bindings.yaml
-kubectl apply -f https://github.com/kubernetes/cloud-provider-vsphere/raw/master/manifests/controller-manager/vsphere-cloud-controller-manager-ds.yaml
+oc apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-vsphere/master/manifests/controller-manager/cloud-controller-manager-roles.yaml
+oc apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-vsphere/master/manifests/controller-manager/cloud-controller-manager-role-bindings.yaml
+oc apply -f https://github.com/kubernetes/cloud-provider-vsphere/raw/master/manifests/controller-manager/vsphere-cloud-controller-manager-ds.yaml
 ```
 
 ### Verify CPI
@@ -80,12 +80,11 @@ Official Documentation - [Deploy the vSphere Container Storage Plug-in on a Nati
 # Taint the Control Plane nodes
 kubectl taint nodes <k8s-primary-name> node-role.kubernetes.io/master=:NoSchedule
 
-# Install the CSI
-oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/v2.4.0/manifests/vanilla/vsphere-csi-driver.yaml
-
 # Create the namespace
 oc apply -f https://github.com/kubernetes-sigs/vsphere-csi-driver/blob/release-2.4/manifests/vanilla/namespace.yaml
 
+# Install the CSI
+oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/v2.4.0/manifests/vanilla/vsphere-csi-driver.yaml
 ````
 
 ### Verify CSI
