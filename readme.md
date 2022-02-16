@@ -56,6 +56,7 @@ oc create configmap cloud-config --from-file=vsphere.conf --namespace=kube-syste
 ```
 
 ## Install CPI
+Official Documentation - [Install vSphere Cloud Provider Interface](https://docs.vmware.com/en/VMware-vSphere-Container-Storage-Plug-in/2.0/vmware-vsphere-csp-getting-started/GUID-0C202FC5-F973-4D24-B383-DDA27DA49BFA.html)
 
 ```sh
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-vsphere/master/manifests/controller-manager/cloud-controller-manager-roles.yaml
@@ -72,36 +73,26 @@ kubectl describe nodes | grep "ProviderID"
 ```
 
 ## Install CSI
+Official Documentation - [Deploy the vSphere Container Storage Plug-in on a Native Kubernetes Cluster](https://docs.vmware.com/en/VMware-vSphere-Container-Storage-Plug-in/2.0/vmware-vsphere-csp-getting-started/GUID-A1982536-F741-4614-A6F2-ADEE21AA4588.html)
+### For vSphere 6.7 U3 and later
 
-### For vSphere 7.0 U1
+````sh
+# Taint the Control Plane nodes
+kubectl taint nodes <k8s-primary-name> node-role.kubernetes.io/master=:NoSchedule
 
-```sh
-oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-7.0u1/rbac/vsphere-csi-controller-rbac.yaml
-oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-7.0u1/deploy/vsphere-csi-node-ds.yaml
-oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-7.0u1/deploy/vsphere-csi-controller-deployment.yaml
-```
+# Install the CSI
+oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/v2.4.0/manifests/vanilla/vsphere-csi-driver.yaml
 
-### For vSphere 7.0
+# Create the namespace
+oc apply -f https://github.com/kubernetes-sigs/vsphere-csi-driver/blob/release-2.4/manifests/vanilla/namespace.yaml
 
-```sh
-oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-7.0/rbac/vsphere-csi-controller-rbac.yaml
-oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-7.0/deploy/vsphere-csi-node-ds.yaml
-oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-7.0/deploy/vsphere-csi-controller-deployment.yaml
-```
-
-### For vSphere 6.7 U3
-
-```sh
-oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-67u3/rbac/vsphere-csi-controller-rbac.yaml
-oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-67u3/deploy/vsphere-csi-node-ds.yaml
-oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/master/manifests/v2.1.0/vsphere-67u3/deploy/vsphere-csi-controller-deployment.yaml
-```
+````
 
 ### Verify CSI
 
 ```sh
-kubectl get deployment --namespace=kube-system
-kubectl get daemonsets vsphere-csi-node --namespace=kube-system
+kubectl get deployment --namespace=vmware-system-csi
+kubectl get daemonsets vsphere-csi-node --namespace=vmware-system-csi
 kubectl describe csidrivers
 kubectl get CSINode
 ```
