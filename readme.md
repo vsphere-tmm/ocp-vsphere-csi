@@ -81,7 +81,7 @@ Official Documentation - [Deploy the vSphere Container Storage Plug-in on a Nati
 kubectl taint nodes <k8s-primary-name> node-role.kubernetes.io/master=:NoSchedule
 
 # Create the namespace
-oc apply -f https://github.com/kubernetes-sigs/vsphere-csi-driver/blob/release-2.4/manifests/vanilla/namespace.yaml
+oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/release-2.4/manifests/vanilla/namespace.yaml
 
 # Install the CSI
 oc apply -f https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/v2.4.0/manifests/vanilla/vsphere-csi-driver.yaml
